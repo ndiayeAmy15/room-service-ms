@@ -46,11 +46,11 @@ jobs:
         run: pwd && ls .
       #Build docker image with Dockerfile and push to docker hub
       - name: Build docker images
-        run: docker build --no-cache -t ${{ secrets.DOCKER_HUB_USER }}/ms-room-back:latest .
+        run: docker build --no-cache -t ${{ secrets.DOCKER_HUB_USER }}/ms-room:latest .
       - name: show image
         run: docker image ls
       - name: Login to docker hub
         run: docker login -u ${{ secrets.DOCKER_HUB_USER }} -p ${{ secrets.DOCKER_HUB_TOKEN }}
       - name: push image to docker hub
-        run: docker push ${{ secrets.DOCKER_HUB_USER }}/ms-room-back:no-auth
+        run: docker push ${{ secrets.DOCKER_HUB_USER }}/ms-room:latest
       - run: echo "This job's status is ${{ job.status }}."
