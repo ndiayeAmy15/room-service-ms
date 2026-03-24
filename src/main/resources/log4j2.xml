@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Properties>
+        <Property name="LOG_DATEFORMAT_PATTERN">yyyy-MM-dd HH:mm:ss.SSS</Property>
+        <Property name="LOG_PATTERN_LEVEL">%-5level [room-service,%X{traceId},%X{spanId}]</Property>
+        <Property name="LOG_EXCEPTION_CONVERSION_WORD">%xwEx</Property>
+        <Property name="LOG_PATTERN">
+            %clr{%d{${sys:LOG_DATEFORMAT_PATTERN}}}{faint}
+            %clr{${sys:LOG_PATTERN_LEVEL}}
+            %clr{%pid}{magenta}
+            %clr{---}{faint}
+            %clr{[%15.15t]}{faint}
+            %clr{%-40.40c{1.}}{cyan}
+            %clr{:}{faint} %m%n${sys:LOG_EXCEPTION_CONVERSION_WORD}
+        </Property>
+    </Properties>
+
+    <Appenders>
+
+        <!-- ✅ Console texte coloré (dev) -->
+        <Console name="Console" target="SYSTEM_OUT" follow="true">
+            <PatternLayout pattern="${sys:LOG_PATTERN}"/>
+        </Console>
+
+        <!-- ✅ Console JSON (prod — décommenter si besoin) -->
+        <Console name="Console_JSON" target="SYSTEM_OUT" follow="true">
+            <JsonLayout complete="false" compact="false">
+                <KeyValuePair key="service" value="room-service"/>
+                <KeyValuePair key="traceId" value="$${ctx:traceId}"/>
+                <KeyValuePair key="spanId"  value="$${ctx:spanId}"/>
+            </JsonLayout>
+        </Console>
+
+        <!-- ✅ Fichier de log en JSON -->
+        <File name="file" fileName="logs/logs.log">
+            <JsonLayout complete="false" compact="false">
+                <KeyValuePair key="service" value="room-service"/>
+            </JsonLayout>
+        </File>
+
+    </Appenders>
+
+    <Loggers>
+
+        <!-- Logger global -->
+        <Root level="info">
+            <AppenderRef ref="Console"/>  <!-- texte coloré actif -->
+            <!-- <AppenderRef ref="Console_JSON"/> --> <!-- JSON — décommenter en prod -->
+            <AppenderRef ref="file"/>
+        </Root>
+
+        <!-- ✅ Logger pour ton controller (DEBUG) -->
+        <Logger name="com.examenSBDO.roomservice.controller"
+                level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- ✅ Logger pour ton service (DEBUG) -->
+        <Logger name="com.examenSBDO.roomservice.service"
+                level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+    </Loggers>
+
+</Configuration>

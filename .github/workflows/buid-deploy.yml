@@ -1,0 +1,56 @@
+name: build dans deploy image
+on : [push]
+
+jobs:
+  build:
+    name: Build job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4       # télécharge le code
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Build with Maven
+        run: mvn -B package -DskipTests
+      - name: Create directory for Uploading artifacts
+        run: mkdir staging && cp target/*.jar staging
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-final
+          path: staging
+          if-no-files-found: error
+          retention-days: 5
+      - name: Show Upload artifacts
+        run: ls staging/
+      - run: echo "This job's status is ${{ job.status }}."
+
+
+  deploy:
+    name: deploy job
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      # checkout project to get Dockerfile
+      - name: Checkout code
+        uses: actions/checkout@v4
+      #Get artifact from build JOB
+      - name: Download a single artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: package-final
+      - name: Show downloaded artifacts directory
+        run: pwd && ls .
+      #Build docker image with Dockerfile and push to docker hub
+      - name: Build docker images
+        run: docker build --no-cache -t ${{ secrets.DOCKER_HUB_USER }}/ms-commande-back:no-auth .
+      - name: show image
+        run: docker image ls
+      - name: log to docker hub
+        run: docker login -u ${{ secrets.DOCKER_HUB_USER }} -p ${{ secrets.DOCKER_HUB_TOKEN }}
+      - name: push image to docker hub
+        run: docker push ${{ secrets.DOCKER_HUB_USER }}/ms-commande-back:no-auth
+      - run: echo "This job's status is ${{ job.status }}."

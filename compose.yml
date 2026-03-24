@@ -1,0 +1,62 @@
+services:
+  roomservice:
+    build: .
+    container_name: roomservice-ms
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/ms_room_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=passer123
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_CACHE_TYPE=redis
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hotel-network
+    restart: on-failure
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=passer123
+      - MYSQL_DATABASE=ms_room_db  # corrigé — était "roomdb" mais l'URL pointe sur ms_room_db
+    volumes:
+      - mysql-room-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppasser123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hotel-network
+
+  redis:
+    image: redis:7.0
+    container_name: redis-local
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-room-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hotel-network
+
+volumes:
+  mysql-room-data:
+  redis-room-data:
+
+networks:
+  hotel-network:
+    driver: bridge
